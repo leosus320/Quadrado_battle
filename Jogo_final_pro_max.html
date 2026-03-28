@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Quadrado Battle</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body{
+      margin:0;
+      font-family: Arial;
+      background:#111;
+      color:white;
+      text-align:center;
+      overflow:hidden;
+    }
+    .tela{ display:none; }
+    button{
+      font-size:18px;
+      padding:12px;
+      margin:8px;
+      border-radius:10px;
+      border:none;
+    }
+    #player, #enemy, #boss, #power{
+      width:110px;
+      height:110px;
+      position:absolute;
+      border-radius:15px;
+    }
+    #enemy{ background:red; }
+    #boss{
+      background:purple;
+      width:160px;
+      height:160px;
+      display:none;
+    }
+    #power{
+      background:gold;
+      display:none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- MENU -->
+<div id="menu" class="tela">
+  <h1>🎮 Quadrado Battle</h1>
+  Nome: <input id="nome"><br>
+  <button onclick="start('classico')">Clássico</button>
+  <button onclick="start('ia')">Vs IA</button>
+  <button onclick="start('survival')">Sobrevivência</button>
+  <button onclick="start('boss')">Boss Fight</button>
+</div>
+
+<!-- JOGO -->
+<div id="jogo" class="tela">
+  <div id="player"></div>
+  <div id="enemy"></div>
+  <div id="boss"></div>
+  <div id="power"></div>
+
+  <div>
+    ❤️ <span id="vida">5</span> |
+    ⭐ <span id="pontos">0</span> |
+    ⏱️ <span id="tempo">60</span> |
+    🏆 <span id="recorde">0</span>
+  </div>
+
+  <h2 id="msg"></h2>
+  <button onclick="pause()">Pausar</button>
+  <button onclick="ir('menu')">Menu</button>
+</div>
+
+<script>
+let modo, pontos=0, tempo=60, vida=5, recorde=localStorage.getItem("recorde")||0;
+let player=document.getElementById("player");
+let enemy=document.getElementById("enemy");
+let boss=document.getElementById("boss");
+let power=document.getElementById("power");
+
+document.getElementById("recorde").innerText=recorde;
+
+function ir(t){
+  for(let e of document.getElementsByClassName("tela")) e.style.display="none";
+  document.getElementById(t).style.display="block";
+}
+
+function start(m){
+  modo=m;
+  pontos=0; tempo=60; vida=5;
+  ir("jogo");
+  loop();
+}
+
+function move(obj){
+  obj.style.left=Math.random()*(window.innerWidth-120)+"px";
+  obj.style.top=Math.random()*(window.innerHeight-200)+"px";
+}
+
+function loop(){
+  intervalo=setInterval(()=>{
+    move(player);
+
+    if(modo=="survival"){
+      enemy.style.display="block";
+      enemy.style.left = enemy.offsetLeft + (player.offsetLeft-enemy.offsetLeft)/6 + "px";
+      enemy.style.top = enemy.offsetTop + (player.offsetTop-enemy.offsetTop)/6 + "px";
+    }
+
+    if(modo=="boss"){
+      boss.style.display="block";
+      boss.style.left = boss.offsetLeft + (player.offsetLeft-boss.offsetLeft)/8 + "px";
+      boss.style.top = boss.offsetTop + (player.offsetTop-boss.offsetTop)/8 + "px";
+    }
+
+    if(Math.random()<0.1){
+      power.style.display="block";
+      move(power);
+    }
+
+    tempo--;
+    update();
+
+    if(tempo<=0 || vida<=0) end();
+  },1000);
+}
+
+player.onclick=player.ontouchstart=()=>{
+  pontos++;
+  update();
+}
+
+enemy.onclick=enemy.ontouchstart=()=>{
+  vida--;
+  update();
+}
+
+boss.onclick=boss.ontouchstart=()=>{
+  pontos+=5;
+  boss.style.display="none";
+}
+
+power.onclick=power.ontouchstart=()=>{
+  vida++;
+  power.style.display="none";
+}
+
+function update(){
+  document.getElementById("vida").innerText=vida;
+  document.getElementById("pontos").innerText=pontos;
+  document.getElementById("tempo").innerText=tempo;
+}
+
+function end(){
+  clearInterval(intervalo);
+  if(pontos>recorde){
+    recorde=pontos;
+    localStorage.setItem("recorde",recorde);
+  }
+  document.getElementById("msg").innerText="Fim! Pontos: "+pontos;
+}
+
+function pause(){
+  clearInterval(intervalo);
+}
+ir("menu");
+</script>
+
+</body>
+</html>
